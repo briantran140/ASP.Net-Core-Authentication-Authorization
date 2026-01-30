@@ -6,3 +6,29 @@
 <div class="text-center">
     <h1 class="display-4">Welcome to Human Resource Management</h1>
 </div>
+<br/>
+
+@if(Model.weatherForecastItems is not null)
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Temperature (C)</th>
+                <th>Temperature (F)</th>
+                <th>Summary</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in Model.weatherForecastItems)
+            {
+                <tr>
+                    <td>@forecast.Date.ToString("d")</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

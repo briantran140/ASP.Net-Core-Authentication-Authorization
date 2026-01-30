@@ -1,0 +1,8 @@
+﻿.vs
+WebApp_Security/Web API/bin
+WebApp_Security/WebApp/bin
+WebApp_Security/WebApp_UnderTheHood/bin
+WebApp_Security/WebApp_UnderTheHood/obj
+WebApp_Security/WebApp/obj
+WebApp_Security/Web API/obj
+WebApp_Security/WebApp/wwwroot/lib

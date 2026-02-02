@@ -1,6 +1,12 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
+using System.Net;
+using System.Net.Mail;
+using System.Security.Claims;
+using WebApp.Data.Account;
+using WebApp.Services;
 
 namespace WebApp.Pages.Account
 {
@@ -8,9 +14,64 @@ namespace WebApp.Pages.Account
     {
         [BindProperty]
         public RegisterViewModel RegisterViewModel { get; set; } = new RegisterViewModel();
+        public UserManager<User> UserManager { get; }
+
+        private IEmailService emailService;
+
+        public RegisterModel(UserManager<User> userManager, IEmailService emailService)
+        {
+            UserManager = userManager;
+            this.emailService = emailService;
+        }
 
         public void OnGet()
         {
+        }
+
+        public async Task<IActionResult> OnPostAsync()
+        {
+            if (!ModelState.IsValid) return Page();
+
+            // Create the user 
+            var user = new User
+            {
+                Email = RegisterViewModel.Email,
+                UserName = RegisterViewModel.Email,
+            };
+
+            var claimDepartment = new Claim("Department", RegisterViewModel.Department);
+            var claimPosition = new Claim("Position", RegisterViewModel.Position);
+
+            var result = await this.UserManager.CreateAsync(user, RegisterViewModel.Password);
+            if(result.Succeeded)
+            {
+                await this.UserManager.AddClaimAsync(user, claimDepartment);
+                await this.UserManager.AddClaimAsync(user, claimPosition);
+
+                var confirmationToken = await this.UserManager.GenerateEmailConfirmationTokenAsync(user);
+                return Redirect(Url.PageLink(pageName: "/Account/ConfirmEmail",
+                              values: new { userId = user.Id, token = confirmationToken }) ?? "");
+
+
+                /////////////////////////////////////////////////////////////////
+                ///To trigger the email confirmation flow, use the code below
+                /////////////////////////////////////////////////////////////////
+                //var confirmationLink =  Url.PageLink(pageName: "/Account/ConfirmEmail",
+                //                            values: new { userId = user.Id, token = confirmationToken }) ?? "";
+
+                //await this.emailService.SendAsync("briantran140@gmail.com", user.Email, "Please confirm your email", $"Please click on this link to confirm your email address: {confirmationLink}");
+
+                //return RedirectToPage("/Account/Login");
+            }
+            else
+            {
+                foreach(var error in result.Errors)
+                {
+                    ModelState.AddModelError("Register", error.Description);
+                }
+
+                return Page();
+            }
         }
     }
 
@@ -23,5 +84,11 @@ namespace WebApp.Pages.Account
         [Required]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
+
+        [Required]
+        public string Department { get; set; } = string.Empty;
+
+        [Required]
+        public string Position { get; set; } = string.Empty;
     }
 }
